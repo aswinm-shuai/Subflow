@@ -1,0 +1,1414 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Subflow – Subscription Reseller Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --navy: #1a2e4a;
+    --navy-dark: #0f1d30;
+    --navy-light: #2a4568;
+    --accent: #2563eb;
+    --accent-light: #3b82f6;
+    --accent-soft: #eff6ff;
+    --sidebar-w: 240px;
+    --gray-50: #f8fafc;
+    --gray-100: #f1f5f9;
+    --gray-200: #e2e8f0;
+    --gray-400: #94a3b8;
+    --gray-600: #475569;
+    --gray-800: #1e293b;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --radius: 12px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.05);
+  }
+  [data-theme="dark"] {
+    --navy: #0f172a;
+    --navy-dark: #020617;
+    --navy-light: #1e293b;
+    --accent-soft: #1e3a5f;
+    --gray-50: #1e293b;
+    --gray-100: #334155;
+    --gray-200: #475569;
+    --gray-400: #94a3b8;
+    --gray-600: #cbd5e1;
+    --gray-800: #f1f5f9;
+    --shadow: 0 1px 3px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.2);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--gray-50); color: var(--gray-800); transition: background 0.2s, color 0.2s; }
+  [data-theme="dark"] body { background: #0f172a; color: #f1f5f9; }
+
+  /* AUTH */
+  #auth-screen { min-height: 100vh; background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 60%, var(--navy-light) 100%); display: flex; align-items: center; justify-content: center; }
+  .auth-card { background: #fff; border-radius: 20px; padding: 2.5rem; width: 100%; max-width: 420px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  [data-theme="dark"] .auth-card { background: #1e293b; }
+  .auth-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 2rem; justify-content: center; }
+  .auth-logo-icon { width: 40px; height: 40px; background: var(--accent); border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+  .auth-logo-icon svg { width: 22px; height: 22px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .auth-logo span { font-size: 1.6rem; font-weight: 700; color: var(--navy); }
+  [data-theme="dark"] .auth-logo span { color: #f1f5f9; }
+  .auth-tab { display: flex; background: var(--gray-100); border-radius: 10px; padding: 4px; margin-bottom: 1.5rem; }
+  .auth-tab button { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 8px; font-weight: 500; font-size: 14px; cursor: pointer; color: var(--gray-600); transition: all 0.2s; }
+  .auth-tab button.active { background: #fff; color: var(--accent); box-shadow: var(--shadow); }
+  [data-theme="dark"] .auth-tab button.active { background: #334155; }
+  .form-label { font-size: 13px; font-weight: 500; color: var(--gray-600); margin-bottom: 4px; }
+  .form-control, .form-select { border: 1px solid var(--gray-200); border-radius: 8px; font-size: 14px; padding: 10px 12px; transition: border 0.2s; background: #fff; color: var(--gray-800); }
+  [data-theme="dark"] .form-control, [data-theme="dark"] .form-select { background: #334155; border-color: #475569; color: #f1f5f9; }
+  .form-control:focus, .form-select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); outline: none; }
+  .btn-primary-custom { background: var(--accent); color: #fff; border: none; padding: 11px 20px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; width: 100%; transition: background 0.2s, transform 0.1s; }
+  .btn-primary-custom:hover { background: #1d4ed8; }
+  .btn-primary-custom:active { transform: scale(0.98); }
+
+  /* APP LAYOUT */
+  #app-screen { display: none; }
+  .sidebar { width: var(--sidebar-w); height: 100vh; position: fixed; top: 0; left: 0; background: var(--navy); z-index: 100; display: flex; flex-direction: column; overflow-y: auto; }
+  .sidebar-logo { padding: 1.25rem 1.25rem 1rem; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+  .sidebar-logo-icon { width: 34px; height: 34px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .sidebar-logo-icon svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .sidebar-logo span { font-size: 1.2rem; font-weight: 700; color: #fff; }
+  .sidebar-nav { flex: 1; padding: 1rem 0.75rem; }
+  .nav-section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); padding: 0 0.5rem; margin: 1rem 0 0.4rem; font-weight: 600; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: rgba(255,255,255,0.7); font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all 0.15s; margin-bottom: 2px; }
+  .nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+  .nav-item.active { background: var(--accent); color: #fff; }
+  .nav-item i { font-size: 15px; flex-shrink: 0; }
+  .sidebar-bottom { padding: 1rem 0.75rem; border-top: 1px solid rgba(255,255,255,0.1); }
+  .user-info { display: flex; align-items: center; gap: 10px; padding: 8px 10px; }
+  .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .user-name { font-size: 13px; font-weight: 600; color: #fff; }
+  .user-email { font-size: 11px; color: rgba(255,255,255,0.5); }
+  .btn-icon-sidebar { background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 6px; border-radius: 6px; font-size: 15px; transition: all 0.15s; }
+  .btn-icon-sidebar:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+  /* MAIN CONTENT */
+  .main-content { margin-left: var(--sidebar-w); min-height: 100vh; }
+  .topbar { background: #fff; border-bottom: 1px solid var(--gray-200); padding: 0.85rem 1.75rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; }
+  [data-theme="dark"] .topbar { background: #1e293b; border-color: #334155; }
+  .topbar-title { font-size: 1.05rem; font-weight: 600; color: var(--gray-800); }
+  .topbar-actions { display: flex; align-items: center; gap: 10px; }
+  .btn-topbar { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; border: 1px solid var(--gray-200); background: #fff; color: var(--gray-800); display: flex; align-items: center; gap: 6px; }
+  [data-theme="dark"] .btn-topbar { background: #334155; border-color: #475569; color: #f1f5f9; }
+  .btn-topbar:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-topbar.btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-topbar.btn-accent:hover { background: #1d4ed8; border-color: #1d4ed8; color: #fff; }
+  .content-area { padding: 1.75rem; }
+
+  /* CARDS */
+  .card-custom { background: #fff; border-radius: var(--radius); border: 1px solid var(--gray-200); box-shadow: var(--shadow); padding: 1.25rem; }
+  [data-theme="dark"] .card-custom { background: #1e293b; border-color: #334155; }
+  .stat-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--gray-200); padding: 1.25rem; box-shadow: var(--shadow); }
+  [data-theme="dark"] .stat-card { background: #1e293b; border-color: #334155; }
+  .stat-card-label { font-size: 12px; color: var(--gray-400); font-weight: 500; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+  .stat-card-value { font-size: 1.6rem; font-weight: 700; color: var(--gray-800); }
+  .stat-card-sub { font-size: 12px; color: var(--gray-400); margin-top: 4px; }
+  .stat-card-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; }
+
+  /* TABLES */
+  .table-custom { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; }
+  .table-custom thead th { background: var(--gray-50); color: var(--gray-600); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 14px; border-bottom: 1px solid var(--gray-200); }
+  [data-theme="dark"] .table-custom thead th { background: #0f172a; border-color: #334155; }
+  .table-custom tbody td { padding: 11px 14px; border-bottom: 1px solid var(--gray-100); color: var(--gray-800); vertical-align: middle; }
+  [data-theme="dark"] .table-custom tbody td { border-color: #1e293b; }
+  .table-custom tbody tr:hover td { background: var(--gray-50); }
+  [data-theme="dark"] .table-custom tbody tr:hover td { background: #0f172a; }
+  .table-wrapper { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--gray-200); }
+  [data-theme="dark"] .table-wrapper { border-color: #334155; }
+
+  /* BADGES */
+  .badge-custom { padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; display: inline-block; }
+  .badge-success { background: #d1fae5; color: #065f46; }
+  .badge-danger { background: #fee2e2; color: #991b1b; }
+  .badge-warning { background: #fef3c7; color: #92400e; }
+  .badge-info { background: #dbeafe; color: #1e40af; }
+  .badge-gray { background: var(--gray-100); color: var(--gray-600); }
+  [data-theme="dark"] .badge-success { background: #064e3b; color: #6ee7b7; }
+  [data-theme="dark"] .badge-danger { background: #450a0a; color: #fca5a5; }
+  [data-theme="dark"] .badge-warning { background: #451a03; color: #fcd34d; }
+  [data-theme="dark"] .badge-info { background: #1e3a5f; color: #93c5fd; }
+  [data-theme="dark"] .badge-gray { background: #334155; color: #94a3b8; }
+
+  /* MODALS */
+  .modal-backdrop-custom { position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+  .modal-box { background: #fff; border-radius: 16px; width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); animation: modalIn 0.2s ease; }
+  [data-theme="dark"] .modal-box { background: #1e293b; }
+  @keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(-10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+  .modal-header-custom { padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; }
+  [data-theme="dark"] .modal-header-custom { border-color: #334155; }
+  .modal-header-custom h5 { font-size: 1rem; font-weight: 600; }
+  .modal-body-custom { padding: 1.5rem; }
+  .modal-footer-custom { padding: 1rem 1.5rem; border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: 10px; }
+  [data-theme="dark"] .modal-footer-custom { border-color: #334155; }
+  .btn-cancel { padding: 9px 18px; border-radius: 8px; border: 1px solid var(--gray-200); background: transparent; color: var(--gray-600); font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+  .btn-cancel:hover { background: var(--gray-100); }
+  .btn-save { padding: 9px 20px; border-radius: 8px; border: none; background: var(--accent); color: #fff; font-size: 13.5px; font-weight: 600; cursor: pointer; transition: all 0.15s; }
+  .btn-save:hover { background: #1d4ed8; }
+
+  /* TOAST */
+  .toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 8px; }
+  .toast-item { background: #fff; border-radius: 10px; padding: 12px 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); display: flex; align-items: center; gap: 10px; font-size: 13.5px; font-weight: 500; min-width: 240px; animation: toastIn 0.3s ease; border-left: 4px solid var(--success); }
+  [data-theme="dark"] .toast-item { background: #1e293b; color: #f1f5f9; }
+  .toast-item.error { border-color: var(--danger); }
+  .toast-item.warning { border-color: var(--warning); }
+  @keyframes toastIn { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* REMINDER BADGE */
+  .reminder-badge { background: var(--danger); color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: inline-flex; align-items: center; justify-content: center; margin-left: auto; font-weight: 700; }
+
+  /* MISC */
+  .section-hidden { display: none !important; }
+  .empty-state { text-align: center; padding: 3rem; color: var(--gray-400); }
+  .empty-state i { font-size: 2.5rem; margin-bottom: 0.75rem; display: block; }
+  .profit-preview { background: var(--accent-soft); border-radius: 8px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+  .profit-preview span:first-child { font-size: 13px; color: var(--accent); font-weight: 500; }
+  .profit-preview span:last-child { font-size: 1.1rem; font-weight: 700; color: var(--accent); }
+  .search-box { position: relative; }
+  .search-box input { padding-left: 36px !important; }
+  .search-box i { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--gray-400); font-size: 14px; }
+  .mobile-toggle { display: none; background: none; border: none; font-size: 20px; color: var(--gray-600); cursor: pointer; }
+  @media (max-width: 768px) {
+    .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+    .sidebar.open { transform: translateX(0); }
+    .main-content { margin-left: 0; }
+    .mobile-toggle { display: block; }
+    .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99; }
+    .overlay.show { display: block; }
+  }
+  .page-section { display: none; }
+  .page-section.active { display: block; }
+  .reminder-row { background: #fff9f0 !important; }
+  [data-theme="dark"] .reminder-row { background: #1c1400 !important; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; }
+  .chart-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--gray-200); padding: 1.25rem; }
+  [data-theme="dark"] .chart-card { background: #1e293b; border-color: #334155; }
+  .chart-title { font-size: 14px; font-weight: 600; margin-bottom: 1rem; color: var(--gray-800); }
+  .tab-nav { display: flex; gap: 4px; background: var(--gray-100); border-radius: 8px; padding: 4px; margin-bottom: 1.25rem; width: fit-content; }
+  [data-theme="dark"] .tab-nav { background: #334155; }
+  .tab-nav button { padding: 6px 16px; border-radius: 6px; border: none; background: transparent; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--gray-600); transition: all 0.15s; }
+  .tab-nav button.active { background: #fff; color: var(--accent); box-shadow: var(--shadow); }
+  [data-theme="dark"] .tab-nav button.active { background: #1e293b; }
+  .page-title { font-size: 1.35rem; font-weight: 700; color: var(--gray-800); margin-bottom: 0.25rem; }
+  .page-subtitle { font-size: 13px; color: var(--gray-400); margin-bottom: 1.5rem; }
+</style>
+</head>
+<body>
+
+<!-- TOAST -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- OVERLAY (mobile) -->
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/><path d="M5 5c0 4 3 7 7 7"/></svg>
+      </div>
+      <span>Subflow</span>
+    </div>
+    <div class="auth-tab">
+      <button class="active" onclick="showAuthTab('login')">Masuk</button>
+      <button onclick="showAuthTab('register')">Daftar</button>
+    </div>
+    <div id="loginForm">
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" id="loginEmail" placeholder="email@kamu.com">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <div class="position-relative">
+          <input type="password" class="form-control" id="loginPass" placeholder="••••••••">
+          <button onclick="togglePass('loginPass')" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--gray-400);cursor:pointer;"><i class="bi bi-eye"></i></button>
+        </div>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="rememberMe">
+          <label class="form-check-label" for="rememberMe" style="font-size:13px;">Ingat saya</label>
+        </div>
+        <a href="#" onclick="showForgotPass()" style="font-size:13px;color:var(--accent);text-decoration:none;">Lupa password?</a>
+      </div>
+      <button class="btn-primary-custom" onclick="doLogin()">Masuk</button>
+    </div>
+    <div id="registerForm" style="display:none;">
+      <div class="mb-3">
+        <label class="form-label">Nama Lengkap</label>
+        <input type="text" class="form-control" id="regName" placeholder="Nama kamu">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-control" id="regEmail" placeholder="email@kamu.com">
+      </div>
+      <div class="mb-3">
+        <label class="form-label">Password</label>
+        <input type="password" class="form-control" id="regPass" placeholder="Min. 6 karakter">
+      </div>
+      <button class="btn-primary-custom" onclick="doRegister()">Buat Akun</button>
+    </div>
+    <p id="authMsg" style="text-align:center;font-size:13px;margin-top:12px;color:var(--danger);display:none;"></p>
+  </div>
+</div>
+
+<!-- APP SCREEN -->
+<div id="app-screen">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/><path d="M5 5c0 4 3 7 7 7"/></svg>
+      </div>
+      <span>Subflow</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Utama</div>
+      <div class="nav-item active" onclick="showPage('dashboard')"><i class="bi bi-grid-1x2"></i> Dashboard</div>
+      <div class="nav-item" onclick="showPage('transaksi')"><i class="bi bi-receipt"></i> Transaksi <span id="reminderBadge" class="reminder-badge" style="display:none;">0</span></div>
+      <div class="nav-item" onclick="showPage('langganan')"><i class="bi bi-arrow-repeat"></i> Langganan</div>
+
+      <div class="nav-section-label">Master Data</div>
+      <div class="nav-item" onclick="showPage('paket')"><i class="bi bi-box-seam"></i> Paket</div>
+      <div class="nav-item" onclick="showPage('customer')"><i class="bi bi-people"></i> Customer</div>
+      <div class="nav-item" onclick="showPage('supplier')"><i class="bi bi-truck"></i> Supplier</div>
+
+      <div class="nav-section-label">Keuangan</div>
+      <div class="nav-item" onclick="showPage('laporan')"><i class="bi bi-bar-chart"></i> Laporan</div>
+      <div class="nav-item" onclick="showPage('biaya')"><i class="bi bi-wallet2"></i> Biaya</div>
+      <div class="nav-item" onclick="showPage('profit')"><i class="bi bi-graph-up-arrow"></i> Profit</div>
+
+      <div class="nav-section-label">Akun</div>
+      <div class="nav-item" onclick="showPage('profil')"><i class="bi bi-person-circle"></i> Profil</div>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-info">
+        <div class="user-avatar" id="sidebarAvatar">A</div>
+        <div style="flex:1;overflow:hidden;">
+          <div class="user-name" id="sidebarName">Admin</div>
+          <div class="user-email" id="sidebarEmail">admin@subflow.id</div>
+        </div>
+        <button class="btn-icon-sidebar" onclick="toggleDark()" title="Dark mode"><i class="bi bi-moon" id="darkIcon"></i></button>
+        <button class="btn-icon-sidebar" onclick="doLogout()" title="Logout"><i class="bi bi-box-arrow-right"></i></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <button class="mobile-toggle" onclick="openSidebar()"><i class="bi bi-list"></i></button>
+        <span class="topbar-title" id="topbarTitle">Dashboard</span>
+      </div>
+      <div class="topbar-actions" id="topbarActions"></div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- DASHBOARD -->
+      <div class="page-section active" id="page-dashboard">
+        <div class="page-title">Selamat datang! 👋</div>
+        <div class="page-subtitle" id="dashGreeting">Subflow – Kelola langganan digitalmu dengan mudah.</div>
+        <div class="stats-grid mb-4" id="dashStats"></div>
+        <div class="row g-3 mb-4">
+          <div class="col-lg-8">
+            <div class="chart-card"><div class="chart-title">Penjualan Bulanan</div><canvas id="salesChart" height="260"></canvas></div>
+          </div>
+          <div class="col-lg-4">
+            <div class="chart-card"><div class="chart-title">Paket Terlaris</div><canvas id="packageChart" height="260"></canvas></div>
+          </div>
+        </div>
+        <div class="card-custom" id="reminderCard">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div style="font-weight:600;font-size:14px;"><i class="bi bi-bell-fill text-warning me-2"></i>Reminder Expired H-3</div>
+          </div>
+          <div id="reminderList"></div>
+        </div>
+      </div>
+
+      <!-- TRANSAKSI -->
+      <div class="page-section" id="page-transaksi">
+        <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+          <div><div class="page-title">Transaksi</div><div class="page-subtitle">Riwayat semua penjualan langganan</div></div>
+          <button class="btn-topbar btn-accent" onclick="openModalTransaksi()"><i class="bi bi-plus-lg"></i> Tambah Transaksi</button>
+        </div>
+        <div class="card-custom mb-3">
+          <div class="row g-2">
+            <div class="col-md-4">
+              <div class="search-box"><i class="bi bi-search"></i><input class="form-control" placeholder="Cari customer / paket..." oninput="renderTransaksi()" id="searchTransaksi"></div>
+            </div>
+            <div class="col-md-3">
+              <select class="form-select" id="filterStatusPembayaran" onchange="renderTransaksi()">
+                <option value="">Semua Status Bayar</option><option value="lunas">Lunas</option><option value="pending">Pending</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <input type="month" class="form-control" id="filterBulanTransaksi" onchange="renderTransaksi()">
+            </div>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table class="table-custom"><thead><tr><th>#</th><th>Tanggal</th><th>Customer</th><th>Paket</th><th>Harga Jual</th><th>Profit</th><th>Mulai</th><th>Expired</th><th>Langganan</th><th>Bayar</th><th>Aksi</th></tr></thead>
+          <tbody id="transaksiBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- LANGGANAN -->
+      <div class="page-section" id="page-langganan">
+        <div class="page-title">Manajemen Langganan</div><div class="page-subtitle">Pantau status & perpanjang langganan customer</div>
+        <div class="card-custom mb-3">
+          <div class="row g-2">
+            <div class="col-md-4">
+              <div class="search-box"><i class="bi bi-search"></i><input class="form-control" id="searchLangganan" placeholder="Cari customer..." oninput="renderLangganan()"></div>
+            </div>
+            <div class="col-md-3">
+              <select class="form-select" id="filterLanggananStatus" onchange="renderLangganan()">
+                <option value="">Semua Status</option><option value="aktif">Aktif</option><option value="expired">Expired</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="table-wrapper">
+          <table class="table-custom"><thead><tr><th>Customer</th><th>Paket</th><th>Mulai</th><th>Expired</th><th>Status</th><th>Sisa Hari</th><th>Aksi</th></tr></thead>
+          <tbody id="langgananBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- PAKET -->
+      <div class="page-section" id="page-paket">
+        <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+          <div><div class="page-title">Master Paket</div><div class="page-subtitle">Kelola produk yang kamu jual</div></div>
+          <button class="btn-topbar btn-accent" onclick="openModalPaket()"><i class="bi bi-plus-lg"></i> Tambah Paket</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="table-custom"><thead><tr><th>#</th><th>Nama Paket</th><th>Harga Jual</th><th>HPP</th><th>Margin</th><th>Durasi</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="paketBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- CUSTOMER -->
+      <div class="page-section" id="page-customer">
+        <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+          <div><div class="page-title">Master Customer</div><div class="page-subtitle">Data pelanggan kamu</div></div>
+          <button class="btn-topbar btn-accent" onclick="openModalCustomer()"><i class="bi bi-plus-lg"></i> Tambah Customer</button>
+        </div>
+        <div class="card-custom mb-3">
+          <div class="search-box" style="max-width:300px;"><i class="bi bi-search"></i><input class="form-control" id="searchCustomer" placeholder="Cari nama / WhatsApp..." oninput="renderCustomer()"></div>
+        </div>
+        <div class="table-wrapper">
+          <table class="table-custom"><thead><tr><th>#</th><th>Nama</th><th>WhatsApp</th><th>Catatan</th><th>Total Transaksi</th><th>Aksi</th></tr></thead>
+          <tbody id="customerBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- SUPPLIER -->
+      <div class="page-section" id="page-supplier">
+        <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+          <div><div class="page-title">Master Supplier</div><div class="page-subtitle">Data supplier akun digital</div></div>
+          <button class="btn-topbar btn-accent" onclick="openModalSupplier()"><i class="bi bi-plus-lg"></i> Tambah Supplier</button>
+        </div>
+        <div class="table-wrapper">
+          <table class="table-custom"><thead><tr><th>#</th><th>Nama Supplier</th><th>Kontak</th><th>Jumlah Transaksi</th><th>Aksi</th></tr></thead>
+          <tbody id="supplierBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- LAPORAN -->
+      <div class="page-section" id="page-laporan">
+        <div class="page-title">Laporan Penjualan</div><div class="page-subtitle">Ringkasan omzet & penjualan</div>
+        <div class="card-custom mb-3">
+          <div class="row g-2 align-items-end">
+            <div class="col-md-3">
+              <label class="form-label">Filter Periode</label>
+              <select class="form-select" id="filterLaporanTipe" onchange="renderLaporan()">
+                <option value="bulan">Per Bulan</option><option value="hari">Per Hari</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Pilih Periode</label>
+              <input type="month" class="form-control" id="filterLaporanPeriode" onchange="renderLaporan()">
+            </div>
+            <div class="col-md-3">
+              <button class="btn-topbar btn-accent w-100" onclick="exportLaporan()"><i class="bi bi-download"></i> Export CSV</button>
+            </div>
+          </div>
+        </div>
+        <div class="stats-grid mb-4" id="laporanStats"></div>
+        <div class="row g-3 mb-3">
+          <div class="col-lg-8"><div class="chart-card"><div class="chart-title">Tren Penjualan</div><canvas id="laporanChart" height="220"></canvas></div></div>
+          <div class="col-lg-4"><div class="chart-card"><div class="chart-title">Top Paket</div><canvas id="laporanPaketChart" height="220"></canvas></div></div>
+        </div>
+        <div class="card-custom">
+          <div class="chart-title mb-3">Detail Transaksi</div>
+          <div class="table-wrapper">
+            <table class="table-custom"><thead><tr><th>Tanggal</th><th>Customer</th><th>Paket</th><th>Harga Jual</th><th>HPP</th><th>Profit</th><th>Status Bayar</th></tr></thead>
+            <tbody id="laporanBody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- BIAYA -->
+      <div class="page-section" id="page-biaya">
+        <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+          <div><div class="page-title">Manajemen Biaya</div><div class="page-subtitle">Catat biaya operasional</div></div>
+          <button class="btn-topbar btn-accent" onclick="openModalBiaya()"><i class="bi bi-plus-lg"></i> Tambah Biaya</button>
+        </div>
+        <div class="stats-grid mb-4" id="biayaStats"></div>
+        <div class="table-wrapper">
+          <table class="table-custom"><thead><tr><th>#</th><th>Nama Biaya</th><th>Nominal</th><th>Tanggal</th><th>Aksi</th></tr></thead>
+          <tbody id="biayaBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- PROFIT -->
+      <div class="page-section" id="page-profit">
+        <div class="page-title">Laporan Profit</div><div class="page-subtitle">Laba kotor & bersih otomatis dari snapshot transaksi</div>
+        <div class="card-custom mb-3">
+          <div class="row g-2">
+            <div class="col-md-3"><label class="form-label">Bulan</label><input type="month" class="form-control" id="filterProfitBulan" onchange="renderProfit()"></div>
+          </div>
+        </div>
+        <div class="stats-grid mb-4" id="profitStats"></div>
+        <div class="row g-3">
+          <div class="col-lg-8"><div class="chart-card"><div class="chart-title">Profit Bulanan</div><canvas id="profitChart" height="220"></canvas></div></div>
+          <div class="col-lg-4">
+            <div class="card-custom h-100">
+              <div class="chart-title mb-3">Rincian Bulan Ini</div>
+              <div id="profitDetail"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PROFIL -->
+      <div class="page-section" id="page-profil">
+        <div class="page-title">Profil Akun</div><div class="page-subtitle">Lihat & edit data akunmu</div>
+        <div class="row g-3">
+          <div class="col-lg-6">
+            <div class="card-custom">
+              <div class="d-flex align-items-center gap-3 mb-4">
+                <div <div style="position:relative;cursor:pointer;" onclick="document.getElementById('photoInput').click()">
+  <div id="profileAvatarBig" style="width:60px;height:60px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;overflow:hidden;">A</div>
+  <div style="position:absolute;bottom:0;right:0;width:20px;height:20px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff;">
+    <i class="bi bi-camera-fill" style="font-size:9px;color:#fff;"></i>
+  </div>
+</div>
+<input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)">
+<div>
+  <div id="profileNameDisplay" style="font-size:1.1rem;font-weight:600;"></div>
+  <div id="profileEmailDisplay" style="font-size:13px;color:var(--gray-400);"></div>
+  <button onclick="document.getElementById('photoInput').click()" style="margin-top:4px;background:none;border:none;color:var(--accent);font-size:12px;cursor:pointer;padding:0;"><i class="bi bi-upload me-1"></i>Ganti foto profil</button>
+</div></div>
+                <div><div id="profileNameDisplay" style="font-size:1.1rem;font-weight:600;"></div><div id="profileEmailDisplay" style="font-size:13px;color:var(--gray-400);"></div></div>
+              </div>
+              <div class="mb-3"><label class="form-label">Nama Lengkap</label><input type="text" class="form-control" id="editName"></div>
+              <div class="mb-3"><label class="form-label">Email</label><input type="email" class="form-control" id="editEmail"></div>
+              <div class="mb-3"><label class="form-label">Password Baru (kosongkan jika tidak ganti)</label><input type="password" class="form-control" id="editPass" placeholder="Min. 6 karakter"></div>
+              <button class="btn-save w-100" onclick="saveProfile()">Simpan Perubahan</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- content-area -->
+  </div><!-- main-content -->
+</div><!-- app-screen -->
+
+<!-- MODALS -->
+<div id="modalContainer"></div>
+
+<script>
+// ============ STORAGE HELPERS ============
+const DB = {
+  get: k => { try { return JSON.parse(localStorage.getItem('sf_'+k)||'null'); } catch{ return null; } },
+  set: (k,v) => localStorage.setItem('sf_'+k, JSON.stringify(v)),
+  users: () => DB.get('users') || [],
+  pakets: () => DB.get('pakets') || [],
+  customers: () => DB.get('customers') || [],
+  suppliers: () => DB.get('suppliers') || [],
+  transaksis: () => DB.get('transaksis') || [],
+  biayas: () => DB.get('biayas') || [],
+  session: () => DB.get('session'),
+  saveUsers: v => DB.set('users', v),
+  savePakets: v => DB.set('pakets', v),
+  saveCustomers: v => DB.set('customers', v),
+  saveSuppliers: v => DB.set('suppliers', v),
+  saveTransaksis: v => DB.set('transaksis', v),
+  saveBiayas: v => DB.set('biayas', v),
+};
+
+// ============ TRANSAKSI CRUD HELPERS ============
+// Variabel global untuk mode edit
+let currentEditId = null;
+
+function createTransaction(data) {
+  const trxs = DB.transaksis();
+  const newId = trxs.length ? Math.max(...trxs.map(t => t.id)) + 1 : 1;
+  trxs.push({ id: newId, ...data });
+  DB.saveTransaksis(trxs);
+  return newId;
+}
+
+function updateTransaction(id, data) {
+  const trxs = DB.transaksis();
+  const idx = trxs.findIndex(t => t.id === id);
+  if (idx < 0) return false;
+  trxs[idx] = { id, ...data };
+  DB.saveTransaksis(trxs);
+  return true;
+}
+
+function deleteTransaction(id) {
+  if (!confirm('Yakin hapus transaksi ini? Data tidak bisa dikembalikan.')) return;
+  DB.saveTransaksis(DB.transaksis().filter(t => t.id !== id));
+  showToast('Transaksi berhasil dihapus');
+  renderTransaksi();
+  checkReminders();
+}
+
+// ============ AUTH ============
+function hashPass(p) { let h=0; for(let i=0;i<p.length;i++){h=(h*31+p.charCodeAt(i))&0xFFFFFFFF;} return h.toString(16); }
+
+function showAuthTab(t) {
+  document.getElementById('loginForm').style.display = t==='login'?'':'none';
+  document.getElementById('registerForm').style.display = t==='register'?'':'none';
+  document.querySelectorAll('.auth-tab button').forEach((b,i)=>b.classList.toggle('active',(i===0&&t==='login')||(i===1&&t==='register')));
+  document.getElementById('authMsg').style.display='none';
+}
+
+function showAuthMsg(msg,ok=false) {
+  const el=document.getElementById('authMsg');
+  el.textContent=msg; el.style.display='block'; el.style.color=ok?'var(--success)':'var(--danger)';
+}
+
+function doRegister() {
+  const name=document.getElementById('regName').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const pass=document.getElementById('regPass').value;
+  if(!name||!email||!pass){return showAuthMsg('Semua field wajib diisi!');}
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){return showAuthMsg('Format email tidak valid!');}
+  if(pass.length<6){return showAuthMsg('Password minimal 6 karakter!');}
+  const users=DB.users();
+  if(users.find(u=>u.email===email)){return showAuthMsg('Email sudah terdaftar!');}
+  users.push({id:Date.now(),name,email,pass:hashPass(pass)});
+  DB.saveUsers(users);
+  showAuthMsg('Akun berhasil dibuat! Silakan login.',true);
+  setTimeout(()=>showAuthTab('login'),1500);
+}
+
+function doLogin() {
+  const email=document.getElementById('loginEmail').value.trim();
+  const pass=document.getElementById('loginPass').value;
+  const remember=document.getElementById('rememberMe').checked;
+  if(!email||!pass){return showAuthMsg('Email & password wajib diisi!');}
+  const users=DB.users();
+  const user=users.find(u=>u.email===email&&u.pass===hashPass(pass));
+  if(!user){return showAuthMsg('Email atau password salah!');}
+  DB.set('session',{...user,remember});
+  initApp(user);
+}
+
+function doLogout() { DB.set('session',null); location.reload(); }
+
+function showForgotPass() {
+  const email=prompt('Masukkan email yang terdaftar:');
+  if(!email)return;
+  const users=DB.users();
+  const user=users.find(u=>u.email===email);
+  if(!user){showToast('Email tidak ditemukan','error');return;}
+  showToast('Fitur reset password: Di demo ini, password baru = "reset123"','warning');
+  const idx=users.indexOf(user); users[idx].pass=hashPass('reset123');
+  DB.saveUsers(users);
+}
+
+function togglePass(id) {
+  const el=document.getElementById(id);
+  el.type=el.type==='password'?'text':'password';
+}
+
+// ============ APP INIT ============
+function initApp(user) {
+  document.getElementById('auth-screen').style.display='none';
+  document.getElementById('app-screen').style.display='block';
+  document.getElementById('sidebarAvatar').textContent=user.name[0].toUpperCase();
+  document.getElementById('sidebarName').textContent=user.name;
+  document.getElementById('sidebarEmail').textContent=user.email;
+  document.getElementById('profileAvatarBig').textContent=user.name[0].toUpperCase();
+  document.getElementById('profileNameDisplay').textContent=user.name;
+  document.getElementById('profileEmailDisplay').textContent=user.email;
+  document.getElementById('editName').value=user.name;
+  document.getElementById('editEmail').value=user.email;
+  if(!DB.pakets().length) seedDemoData();
+  updateLanggananStatus();
+  checkReminders();
+  loadProfilePhoto();
+  showPage('dashboard');
+}
+
+function seedDemoData() {
+  DB.savePakets([
+    {id:1,nama:'Netflix 1P',harga:45000,hpp:30000,durasi:30,status:'aktif'},
+    {id:2,nama:'Spotify 1B',harga:20000,hpp:12000,durasi:30,status:'aktif'},
+    {id:3,nama:'Disney+ 1P',harga:35000,hpp:22000,durasi:30,status:'aktif'},
+    {id:4,nama:'YouTube Premium',harga:25000,hpp:16000,durasi:30,status:'aktif'},
+    {id:5,nama:'Netflix 7 Hari',harga:15000,hpp:10000,durasi:7,status:'aktif'},
+  ]);
+  DB.saveCustomers([
+    {id:1,nama:'Budi Santoso',wa:'6281234567890',catatan:'VIP customer'},
+    {id:2,nama:'Sari Dewi',wa:'6287654321098',catatan:''},
+    {id:3,nama:'Andi Kurniawan',wa:'6285555123456',catatan:'Sering terlambat bayar'},
+  ]);
+  DB.saveSuppliers([
+    {id:1,nama:'Toko Akun ABC',kontak:'6281111222333'},
+    {id:2,nama:'DigitalStore ID',kontak:'Telegram: @digitalstore'},
+  ]);
+  const today=new Date();
+  const trx=[
+    {id:1,tgl:fmtDate(new Date(today.getFullYear(),today.getMonth(),1)),custId:1,paketId:1,harga:45000,hpp:30000,profit:15000,mulai:fmtDate(new Date(today.getFullYear(),today.getMonth(),1)),expired:fmtDate(new Date(today.getFullYear(),today.getMonth(),31)),statusLangganan:'aktif',statusBayar:'lunas',suppId:1},
+    {id:2,tgl:fmtDate(new Date(today.getFullYear(),today.getMonth(),3)),custId:2,paketId:2,harga:20000,hpp:12000,profit:8000,mulai:fmtDate(new Date(today.getFullYear(),today.getMonth(),3)),expired:fmtDate(new Date(today.getFullYear(),today.getMonth(),today.getDate()+2)),statusLangganan:'aktif',statusBayar:'lunas',suppId:2},
+    {id:3,tgl:fmtDate(new Date(today.getFullYear(),today.getMonth()-1,15)),custId:3,paketId:3,harga:35000,hpp:22000,profit:13000,mulai:fmtDate(new Date(today.getFullYear(),today.getMonth()-1,15)),expired:fmtDate(new Date(today.getFullYear(),today.getMonth()-1,14+30)),statusLangganan:'expired',statusBayar:'lunas',suppId:1},
+    {id:4,tgl:fmtDate(new Date(today.getFullYear(),today.getMonth(),5)),custId:1,paketId:4,harga:25000,hpp:16000,profit:9000,mulai:fmtDate(new Date(today.getFullYear(),today.getMonth(),5)),expired:fmtDate(new Date(today.getFullYear(),today.getMonth(),today.getDate()+1)),statusLangganan:'aktif',statusBayar:'pending',suppId:2},
+  ];
+  DB.saveTransaksis(trx);
+  DB.saveBiayas([
+    {id:1,nama:'Iklan IG',nominal:50000,tgl:fmtDate(new Date(today.getFullYear(),today.getMonth(),1))},
+    {id:2,nama:'Domain',nominal:20000,tgl:fmtDate(new Date(today.getFullYear(),today.getMonth(),10))},
+  ]);
+}
+
+function fmtDate(d) {
+  if(!(d instanceof Date)||isNaN(d))return '';
+  return d.toISOString().split('T')[0];
+}
+
+function fmtRupiah(n) { return 'Rp '+Number(n||0).toLocaleString('id-ID'); }
+
+// ============ STATUS UPDATE ============
+function updateLanggananStatus() {
+  const today=new Date(); today.setHours(0,0,0,0);
+  const trxs=DB.transaksis();
+  let changed=false;
+  trxs.forEach(t=>{
+    const exp=new Date(t.expired); exp.setHours(0,0,0,0);
+    const ns=today>exp?'expired':'aktif';
+    if(t.statusLangganan!==ns){t.statusLangganan=ns;changed=true;}
+  });
+  if(changed) DB.saveTransaksis(trxs);
+}
+
+function checkReminders() {
+  const today=new Date(); today.setHours(0,0,0,0);
+  const trxs=DB.transaksis().filter(t=>t.statusLangganan==='aktif');
+  const expiring=trxs.filter(t=>{
+    const exp=new Date(t.expired); exp.setHours(0,0,0,0);
+    const diff=(exp-today)/(1000*60*60*24);
+    return diff>=0&&diff<=3;
+  });
+  const badge=document.getElementById('reminderBadge');
+  if(expiring.length>0){badge.style.display='inline-flex';badge.textContent=expiring.length;}
+  else badge.style.display='none';
+}
+
+// ============ NAVIGATION ============
+const pageNames={dashboard:'Dashboard',transaksi:'Transaksi',langganan:'Manajemen Langganan',paket:'Master Paket',customer:'Master Customer',supplier:'Master Supplier',laporan:'Laporan Penjualan',biaya:'Manajemen Biaya',profit:'Laporan Profit',profil:'Profil Akun'};
+
+function showPage(name) {
+  document.querySelectorAll('.page-section').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>{ if(n.textContent.toLowerCase().includes(name.substring(0,5)))n.classList.add('active'); });
+  document.getElementById('topbarTitle').textContent=pageNames[name]||name;
+  closeSidebar();
+  if(name==='dashboard') renderDashboard();
+  else if(name==='transaksi') renderTransaksi();
+  else if(name==='langganan') renderLangganan();
+  else if(name==='paket') renderPaket();
+  else if(name==='customer') renderCustomer();
+  else if(name==='supplier') renderSupplier();
+  else if(name==='laporan') renderLaporan();
+  else if(name==='biaya') renderBiaya();
+  else if(name==='profit') renderProfit();
+}
+
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+
+// ============ TOAST ============
+function showToast(msg,type='success') {
+  const c=document.getElementById('toastContainer');
+  const t=document.createElement('div');
+  t.className='toast-item'+(type==='error'?' error':type==='warning'?' warning':'');
+  t.innerHTML=`<i class="bi bi-${type==='success'?'check-circle-fill text-success':type==='warning'?'exclamation-triangle-fill text-warning':'x-circle-fill text-danger'}"></i>${msg}`;
+  c.appendChild(t);
+  setTimeout(()=>t.remove(),3500);
+}
+
+// ============ DARK MODE ============
+function toggleDark() {
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  document.documentElement.setAttribute('data-theme',isDark?'':'dark');
+  document.getElementById('darkIcon').className=isDark?'bi bi-moon':'bi bi-sun';
+  DB.set('darkMode',!isDark);
+}
+
+// ============ MODAL HELPER ============
+function openModal(title,bodyHtml,onSave,saveLabel='Simpan') {
+  const el=document.getElementById('modalContainer');
+  el.innerHTML=`<div class="modal-backdrop-custom" id="modalBg" onclick="closeModalOnBg(event)">
+    <div class="modal-box">
+      <div class="modal-header-custom"><h5>${title}</h5><button onclick="closeModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray-400);"><i class="bi bi-x"></i></button></div>
+      <div class="modal-body-custom">${bodyHtml}</div>
+      <div class="modal-footer-custom"><button class="btn-cancel" onclick="closeModal()">Batal</button><button class="btn-save" onclick="${onSave}">${saveLabel}</button></div>
+    </div></div>`;
+}
+
+function closeModal(){
+  document.getElementById('modalContainer').innerHTML='';
+  currentEditId = null; // ✅ selalu reset saat modal ditutup
+}
+function closeModalOnBg(e){if(e.target.id==='modalBg')closeModal();}
+
+// ============ DASHBOARD ============
+let salesChartInst,packageChartInst;
+
+function renderDashboard() {
+  const today=new Date().toISOString().split('T')[0];
+  const todayMonth=today.substring(0,7);
+  const trxs=DB.transaksis();
+  const todayTrx=trxs.filter(t=>t.tgl===today);
+  const monthTrx=trxs.filter(t=>t.tgl&&t.tgl.startsWith(todayMonth));
+  const aktif=trxs.filter(t=>t.statusLangganan==='aktif').length;
+  const omzetToday=todayTrx.reduce((a,t)=>a+t.harga,0);
+  const profitMonth=monthTrx.reduce((a,t)=>a+t.profit,0);
+  const omzetMonth=monthTrx.reduce((a,t)=>a+t.harga,0);
+
+  document.getElementById('dashStats').innerHTML=`
+    <div class="stat-card d-flex justify-content-between align-items-start">
+      <div><div class="stat-card-label">Omzet Hari Ini</div><div class="stat-card-value">${fmtRupiah(omzetToday)}</div><div class="stat-card-sub">${todayTrx.length} transaksi</div></div>
+      <div class="stat-card-icon" style="background:#dbeafe;color:#2563eb;"><i class="bi bi-cash-coin"></i></div>
+    </div>
+    <div class="stat-card d-flex justify-content-between align-items-start">
+      <div><div class="stat-card-label">Omzet Bulan Ini</div><div class="stat-card-value">${fmtRupiah(omzetMonth)}</div><div class="stat-card-sub">${monthTrx.length} transaksi</div></div>
+      <div class="stat-card-icon" style="background:#d1fae5;color:#065f46;"><i class="bi bi-graph-up"></i></div>
+    </div>
+    <div class="stat-card d-flex justify-content-between align-items-start">
+      <div><div class="stat-card-label">Profit Bulan Ini</div><div class="stat-card-value">${fmtRupiah(profitMonth)}</div><div class="stat-card-sub">Laba kotor</div></div>
+      <div class="stat-card-icon" style="background:#fef3c7;color:#92400e;"><i class="bi bi-trophy"></i></div>
+    </div>
+    <div class="stat-card d-flex justify-content-between align-items-start">
+      <div><div class="stat-card-label">Customer Aktif</div><div class="stat-card-value">${aktif}</div><div class="stat-card-sub">Langganan aktif</div></div>
+      <div class="stat-card-icon" style="background:#ede9fe;color:#6d28d9;"><i class="bi bi-people"></i></div>
+    </div>`;
+
+  const months=[];const omzetArr=[];const profArr=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date();d.setMonth(d.getMonth()-i);
+    const m=d.toISOString().substring(0,7);
+    const mn=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    months.push(mn[d.getMonth()]+' '+d.getFullYear().toString().slice(2));
+    const mt=trxs.filter(t=>t.tgl&&t.tgl.startsWith(m));
+    omzetArr.push(mt.reduce((a,t)=>a+t.harga,0));
+    profArr.push(mt.reduce((a,t)=>a+t.profit,0));
+  }
+  if(salesChartInst)salesChartInst.destroy();
+  salesChartInst=new Chart(document.getElementById('salesChart'),{type:'bar',data:{labels:months,datasets:[{label:'Omzet',data:omzetArr,backgroundColor:'rgba(37,99,235,0.15)',borderColor:'#2563eb',borderWidth:2,borderRadius:6},{label:'Profit',data:profArr,backgroundColor:'rgba(16,185,129,0.15)',borderColor:'#10b981',borderWidth:2,borderRadius:6}]},options:{responsive:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'Rp '+v.toLocaleString('id-ID')}}}}});
+
+  const pakets=DB.pakets();
+  const pkgData={};
+  trxs.filter(t=>t.tgl&&t.tgl.startsWith(todayMonth)).forEach(t=>{
+    const p=pakets.find(pk=>pk.id===t.paketId);
+    if(p){pkgData[p.nama]=(pkgData[p.nama]||0)+1;}
+  });
+  if(packageChartInst)packageChartInst.destroy();
+  const pkNames=Object.keys(pkgData);const pkVals=Object.values(pkgData);
+  packageChartInst=new Chart(document.getElementById('packageChart'),{type:'doughnut',data:{labels:pkNames.length?pkNames:['Belum ada data'],datasets:[{data:pkVals.length?pkVals:[1],backgroundColor:['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
+
+  const expiring=trxs.filter(t=>{
+    if(t.statusLangganan!=='aktif')return false;
+    const today2=new Date();today2.setHours(0,0,0,0);
+    const exp=new Date(t.expired);exp.setHours(0,0,0,0);
+    const diff=(exp-today2)/(1000*60*60*24);
+    return diff>=0&&diff<=3;
+  });
+  const custs=DB.customers();const pks=DB.pakets();
+  if(expiring.length===0){
+    document.getElementById('reminderList').innerHTML='<p style="color:var(--gray-400);font-size:13px;">Tidak ada langganan yang akan expired dalam 3 hari ke depan.</p>';
+  } else {
+    document.getElementById('reminderList').innerHTML=`<div class="table-wrapper"><table class="table-custom"><thead><tr><th>Customer</th><th>Paket</th><th>Expired</th><th>Sisa Hari</th><th>Aksi</th></tr></thead><tbody>
+    ${expiring.map(t=>{
+      const c=custs.find(c=>c.id===t.custId);const p=pks.find(p=>p.id===t.paketId);
+      const today2=new Date();today2.setHours(0,0,0,0);const exp=new Date(t.expired);exp.setHours(0,0,0,0);
+      const diff=Math.round((exp-today2)/(1000*60*60*24));
+      return `<tr><td>${c?c.nama:'-'}</td><td>${p?p.nama:'-'}</td><td>${t.expired}</td><td><span class="badge-custom badge-warning">${diff} hari</span></td><td><button class="btn-topbar btn-accent" style="padding:4px 12px;font-size:12px;" onclick="doRenewal(${t.id})"><i class="bi bi-arrow-repeat"></i> Perpanjang</button></td></tr>`;
+    }).join('')}</tbody></table></div>`;
+  }
+}
+
+// ============ TRANSAKSI ============
+function renderTransaksi() {
+  const search=(document.getElementById('searchTransaksi')||{value:''}).value.toLowerCase();
+  const filterBayar=(document.getElementById('filterStatusPembayaran')||{value:''}).value;
+  const filterBulan=(document.getElementById('filterBulanTransaksi')||{value:''}).value;
+  const trxs=DB.transaksis();const custs=DB.customers();const pks=DB.pakets();
+  let filtered=trxs.filter(t=>{
+    const c=custs.find(c=>c.id===t.custId);const p=pks.find(p=>p.id===t.paketId);
+    const q=(c?c.nama:'')+(p?p.nama:'');
+    if(search&&!q.toLowerCase().includes(search))return false;
+    if(filterBayar&&t.statusBayar!==filterBayar)return false;
+    if(filterBulan&&!(t.tgl&&t.tgl.startsWith(filterBulan)))return false;
+    return true;
+  });
+  const body=document.getElementById('transaksiBody');
+  if(!filtered.length){body.innerHTML='<tr><td colspan="11"><div class="empty-state"><i class="bi bi-receipt"></i>Belum ada transaksi</div></td></tr>';return;}
+  body.innerHTML=filtered.sort((a,b)=>b.id-a.id).map((t,i)=>{
+    const c=custs.find(c=>c.id===t.custId);const p=pks.find(p=>p.id===t.paketId);
+    const today=new Date();today.setHours(0,0,0,0);const exp=new Date(t.expired);exp.setHours(0,0,0,0);
+    const isReminder=t.statusLangganan==='aktif'&&(exp-today)/(1000*60*60*24)<=3;
+    return `<tr class="${isReminder?'reminder-row':''}">
+      <td>${i+1}</td><td>${t.tgl||''}</td>
+      <td>${c?c.nama:'<span class="text-danger">?</span>'}</td>
+      <td>${p?p.nama:'<span class="text-danger">?</span>'}</td>
+      <td>${fmtRupiah(t.harga)}</td>
+      <td style="color:var(--success);font-weight:600;">${fmtRupiah(t.profit)}</td>
+      <td>${t.mulai}</td><td>${t.expired}</td>
+      <td><span class="badge-custom ${t.statusLangganan==='aktif'?'badge-success':'badge-danger'}">${t.statusLangganan}</span></td>
+      <td><span class="badge-custom ${t.statusBayar==='lunas'?'badge-info':'badge-warning'}">${t.statusBayar}</span></td>
+      <td style="white-space:nowrap;">
+        <button class="btn-topbar" style="padding:4px 8px;font-size:12px;" onclick="toggleBayar(${t.id})" title="Toggle status bayar"><i class="bi bi-arrow-left-right"></i></button>
+        <button class="btn-topbar" style="padding:4px 8px;font-size:12px;" onclick="editTransaksi(${t.id})" title="Edit"><i class="bi bi-pencil"></i></button>
+        <button class="btn-topbar" style="padding:4px 8px;font-size:12px;color:var(--danger);border-color:var(--danger);" onclick="deleteTransaction(${t.id})" title="Hapus"><i class="bi bi-trash"></i></button>
+        ${t.statusLangganan==='aktif'?`<button class="btn-topbar btn-accent" style="padding:4px 8px;font-size:12px;" onclick="doRenewal(${t.id})" title="Perpanjang"><i class="bi bi-arrow-repeat"></i></button>`:''}
+      </td></tr>`;
+  }).join('');
+}
+
+function toggleBayar(id) {
+  const trxs=DB.transaksis();const idx=trxs.findIndex(t=>t.id===id);
+  if(idx<0)return;
+  trxs[idx].statusBayar=trxs[idx].statusBayar==='lunas'?'pending':'lunas';
+  DB.saveTransaksis(trxs);renderTransaksi();showToast('Status pembayaran diperbarui');
+}
+
+// ✅ FUNGSI EDIT — buka modal dengan data lama, set currentEditId
+function editTransaksi(id) {
+  const t = DB.transaksis().find(t => t.id === id);
+  if (!t) return;
+  currentEditId = id;
+  const pks = DB.pakets().filter(p => p.status === 'aktif');
+  const custs = DB.customers();
+  const supps = DB.suppliers();
+  const html = `
+    <div class="mb-2 p-2" style="background:var(--accent-soft);border-radius:8px;font-size:12px;color:var(--accent);"><i class="bi bi-pencil-square me-1"></i>Mode Edit – ID Transaksi #${id}</div>
+    <div class="mb-3"><label class="form-label">Tanggal Transaksi *</label><input type="date" class="form-control" id="tTgl" value="${t.tgl}"></div>
+    <div class="mb-3"><label class="form-label">Customer *</label>
+      <select class="form-select" id="tCust">${custs.map(c=>`<option value="${c.id}" ${t.custId===c.id?'selected':''}>${c.nama}</option>`).join('')}</select>
+    </div>
+    <div class="mb-3"><label class="form-label">Paket *</label>
+      <select class="form-select" id="tPaket" onchange="previewProfit()">${pks.map(p=>`<option value="${p.id}" data-harga="${p.harga}" data-hpp="${p.hpp}" data-durasi="${p.durasi}" ${t.paketId===p.id?'selected':''}>${p.nama} – ${fmtRupiah(p.harga)}</option>`).join('')}</select>
+    </div>
+    <div class="row g-2 mb-3">
+      <div class="col-6"><label class="form-label">Harga Jual (otomatis)</label><input type="text" class="form-control" id="tHarga" readonly></div>
+      <div class="col-6"><label class="form-label">HPP (otomatis)</label><input type="text" class="form-control" id="tHpp" readonly></div>
+    </div>
+    <div id="profitPreviewArea"></div>
+    <div class="mb-3"><label class="form-label">Supplier (opsional)</label>
+      <select class="form-select" id="tSupp"><option value="">– Pilih Supplier –</option>${supps.map(s=>`<option value="${s.id}" ${t.suppId===s.id?'selected':''}>${s.nama}</option>`).join('')}</select>
+    </div>
+    <div class="mb-3"><label class="form-label">Status Pembayaran</label>
+      <select class="form-select" id="tStatusBayar"><option value="lunas" ${t.statusBayar==='lunas'?'selected':''}>Lunas</option><option value="pending" ${t.statusBayar==='pending'?'selected':''}>Pending</option></select>
+    </div>`;
+  openModal('Edit Transaksi', html, 'saveTransaksi()', 'Update Transaksi');
+  setTimeout(previewProfit, 50);
+}
+
+// ✅ MODAL TAMBAH BARU — pastikan currentEditId = null
+function openModalTransaksi(renewData=null) {
+  currentEditId = null;
+  const pks=DB.pakets().filter(p=>p.status==='aktif');
+  const custs=DB.customers();
+  const supps=DB.suppliers();
+  const today=new Date().toISOString().split('T')[0];
+  const html=`
+    <div class="mb-3"><label class="form-label">Tanggal Transaksi *</label><input type="date" class="form-control" id="tTgl" value="${today}"></div>
+    <div class="mb-3"><label class="form-label">Customer *</label>
+      <select class="form-select" id="tCust">${custs.map(c=>`<option value="${c.id}" ${renewData&&renewData.custId===c.id?'selected':''}>${c.nama}</option>`).join('')}</select>
+    </div>
+    <div class="mb-3"><label class="form-label">Paket *</label>
+      <select class="form-select" id="tPaket" onchange="previewProfit()">${pks.map(p=>`<option value="${p.id}" data-harga="${p.harga}" data-hpp="${p.hpp}" data-durasi="${p.durasi}" ${renewData&&renewData.paketId===p.id?'selected':''}>${p.nama} – ${fmtRupiah(p.harga)}</option>`).join('')}</select>
+    </div>
+    <div class="row g-2 mb-3">
+      <div class="col-6"><label class="form-label">Harga Jual (otomatis)</label><input type="text" class="form-control" id="tHarga" readonly></div>
+      <div class="col-6"><label class="form-label">HPP (otomatis)</label><input type="text" class="form-control" id="tHpp" readonly></div>
+    </div>
+    <div id="profitPreviewArea"></div>
+    <div class="mb-3"><label class="form-label">Supplier (opsional)</label>
+      <select class="form-select" id="tSupp"><option value="">– Pilih Supplier –</option>${supps.map(s=>`<option value="${s.id}">${s.nama}</option>`).join('')}</select>
+    </div>
+    <div class="mb-3"><label class="form-label">Metode Pembayaran</label>
+      <select class="form-select" id="tMetode"><option>Cash</option><option>Transfer Bank</option><option>QRIS</option><option>Dompet Digital</option></select>
+    </div>
+    <div class="mb-3"><label class="form-label">Status Pembayaran</label>
+      <select class="form-select" id="tStatusBayar"><option value="lunas">Lunas</option><option value="pending">Pending</option></select>
+    </div>`;
+  openModal('Tambah Transaksi',html,'saveTransaksi()','Simpan Transaksi');
+  setTimeout(previewProfit,50);
+}
+
+function previewProfit() {
+  const sel=document.getElementById('tPaket');if(!sel)return;
+  const opt=sel.options[sel.selectedIndex];
+  if(!opt)return;
+  const harga=parseInt(opt.dataset.harga||0);
+  const hpp=parseInt(opt.dataset.hpp||0);
+  const profit=harga-hpp;
+  document.getElementById('tHarga').value=fmtRupiah(harga);
+  document.getElementById('tHpp').value=fmtRupiah(hpp);
+  document.getElementById('profitPreviewArea').innerHTML=`<div class="profit-preview mb-3"><span>Profit Estimasi</span><span>${fmtRupiah(profit)}</span></div>`;
+}
+
+// ✅ SAVE — cek currentEditId: ada = UPDATE, null = TAMBAH BARU
+function saveTransaksi() {
+  const tgl=document.getElementById('tTgl').value;
+  const custId=parseInt(document.getElementById('tCust').value);
+  const paketId=parseInt(document.getElementById('tPaket').value);
+  const statusBayar=document.getElementById('tStatusBayar').value;
+  if(!tgl||!custId||!paketId){showToast('Lengkapi semua field!','error');return;}
+  const paket=DB.pakets().find(p=>p.id===paketId);
+  if(!paket){showToast('Paket tidak ditemukan','error');return;}
+  const mulai=tgl;
+  const expDate=new Date(tgl);expDate.setDate(expDate.getDate()+paket.durasi);
+  const expired=fmtDate(expDate);
+  const today=new Date();today.setHours(0,0,0,0);
+  const expD=new Date(expired);expD.setHours(0,0,0,0);
+  const statusLangganan=today>expD?'expired':'aktif';
+  const suppId=parseInt(document.getElementById('tSupp').value)||null;
+  const trxData={tgl,custId,paketId,harga:paket.harga,hpp:paket.hpp,profit:paket.harga-paket.hpp,mulai,expired,statusLangganan,statusBayar,suppId};
+
+  if(currentEditId !== null) {
+    // ✅ MODE EDIT: update, jangan buat baru
+    updateTransaction(currentEditId, trxData);
+    closeModal(); // ini juga reset currentEditId via closeModal()
+    showToast('Transaksi berhasil diperbarui! ✅');
+  } else {
+    // ✅ MODE TAMBAH: buat baru
+    createTransaction(trxData);
+    closeModal();
+    showToast('Transaksi berhasil disimpan! 🎉');
+  }
+  renderTransaksi();
+  checkReminders();
+}
+
+function doRenewal(trxId) {
+  const t=DB.transaksis().find(t=>t.id===trxId);
+  if(!t)return;
+  openModalTransaksi({custId:t.custId,paketId:t.paketId});
+  showToast('Data customer & paket sudah diisi otomatis','');
+}
+
+// ============ LANGGANAN ============
+function renderLangganan() {
+  const search=(document.getElementById('searchLangganan')||{value:''}).value.toLowerCase();
+  const filterStatus=(document.getElementById('filterLanggananStatus')||{value:''}).value;
+  const trxs=DB.transaksis();const custs=DB.customers();const pks=DB.pakets();
+  const today=new Date();today.setHours(0,0,0,0);
+  let filtered=trxs.filter(t=>{
+    const c=custs.find(c=>c.id===t.custId);
+    if(search&&!(c?c.nama:'').toLowerCase().includes(search))return false;
+    if(filterStatus&&t.statusLangganan!==filterStatus)return false;
+    return true;
+  });
+  const body=document.getElementById('langgananBody');
+  if(!filtered.length){body.innerHTML='<tr><td colspan="7"><div class="empty-state"><i class="bi bi-arrow-repeat"></i>Belum ada data langganan</div></td></tr>';return;}
+  body.innerHTML=filtered.sort((a,b)=>new Date(a.expired)-new Date(b.expired)).map(t=>{
+    const c=custs.find(c=>c.id===t.custId);const p=pks.find(p=>p.id===t.paketId);
+    const exp=new Date(t.expired);exp.setHours(0,0,0,0);
+    const diff=Math.round((exp-today)/(1000*60*60*24));
+    const isReminder=t.statusLangganan==='aktif'&&diff>=0&&diff<=3;
+    return `<tr class="${isReminder?'reminder-row':''}">
+      <td>${c?c.nama:'-'}</td><td>${p?p.nama:'-'}</td>
+      <td>${t.mulai}</td><td>${t.expired}</td>
+      <td><span class="badge-custom ${t.statusLangganan==='aktif'?'badge-success':'badge-danger'}">${t.statusLangganan}</span></td>
+      <td>${t.statusLangganan==='aktif'?`<span class="badge-custom ${diff<=3?'badge-warning':'badge-gray'}">${diff} hari</span>`:'–'}</td>
+      <td>${t.statusLangganan==='aktif'?`<button class="btn-topbar btn-accent" style="padding:4px 12px;font-size:12px;" onclick="doRenewal(${t.id})"><i class="bi bi-arrow-repeat"></i> Perpanjang</button>`:''}
+      ${c?`<a href="https://wa.me/${c.wa}" target="_blank" class="btn-topbar ms-1" style="padding:4px 12px;font-size:12px;text-decoration:none;"><i class="bi bi-whatsapp text-success"></i></a>`:''}
+      </td></tr>`;
+  }).join('');
+}
+
+// ============ PAKET ============
+function renderPaket() {
+  const pks=DB.pakets();
+  const body=document.getElementById('paketBody');
+  if(!pks.length){body.innerHTML='<tr><td colspan="8"><div class="empty-state"><i class="bi bi-box-seam"></i>Belum ada paket</div></td></tr>';return;}
+  body.innerHTML=pks.map((p,i)=>`<tr>
+    <td>${i+1}</td><td style="font-weight:600;">${p.nama}</td>
+    <td>${fmtRupiah(p.harga)}</td><td>${fmtRupiah(p.hpp)}</td>
+    <td style="color:var(--success);font-weight:600;">${fmtRupiah(p.harga-p.hpp)}</td>
+    <td>${p.durasi} hari</td>
+    <td><span class="badge-custom ${p.status==='aktif'?'badge-success':'badge-gray'}">${p.status}</span></td>
+    <td>
+      <button class="btn-topbar" style="padding:4px 10px;font-size:12px;" onclick="editPaket(${p.id})"><i class="bi bi-pencil"></i></button>
+      <button class="btn-topbar" style="padding:4px 10px;font-size:12px;" onclick="togglePaketStatus(${p.id})"><i class="bi bi-${p.status==='aktif'?'toggle-on text-success':'toggle-off'}"></i></button>
+    </td></tr>`).join('');
+}
+
+function openModalPaket(id=null) {
+  const pks=DB.pakets();const p=id?pks.find(pk=>pk.id===id):null;
+  const html=`
+    <div class="mb-3"><label class="form-label">Nama Paket *</label><input type="text" class="form-control" id="pNama" value="${p?p.nama:''}" placeholder="cth: Netflix 1P"></div>
+    <div class="row g-2 mb-3">
+      <div class="col-6"><label class="form-label">Harga Jual *</label><input type="number" class="form-control" id="pHarga" value="${p?p.harga:''}" placeholder="45000"></div>
+      <div class="col-6"><label class="form-label">HPP *</label><input type="number" class="form-control" id="pHpp" value="${p?p.hpp:''}" placeholder="30000"></div>
+    </div>
+    <div class="mb-3"><label class="form-label">Durasi (hari) *</label><select class="form-select" id="pDurasi"><option value="7" ${p&&p.durasi===7?'selected':''}>7 Hari</option><option value="30" ${!p||p.durasi===30?'selected':''}>30 Hari</option></select></div>
+    <div class="mb-3"><label class="form-label">Status</label><select class="form-select" id="pStatus"><option value="aktif" ${!p||p.status==='aktif'?'selected':''}>Aktif</option><option value="nonaktif" ${p&&p.status==='nonaktif'?'selected':''}>Nonaktif</option></select></div>`;
+  openModal(id?'Edit Paket':'Tambah Paket',html,`savePaket(${id||'null'})`);
+}
+
+function editPaket(id){openModalPaket(id);}
+
+function savePaket(id) {
+  const nama=document.getElementById('pNama').value.trim();
+  const harga=parseFloat(document.getElementById('pHarga').value);
+  const hpp=parseFloat(document.getElementById('pHpp').value);
+  const durasi=parseInt(document.getElementById('pDurasi').value);
+  const status=document.getElementById('pStatus').value;
+  if(!nama||!harga||!hpp){showToast('Nama, Harga, dan HPP wajib diisi!','error');return;}
+  const pks=DB.pakets();
+  if(id){
+    const idx=pks.findIndex(p=>p.id===id);if(idx>=0)pks[idx]={...pks[idx],nama,harga,hpp,durasi,status};
+  } else {
+    const newId=pks.length?Math.max(...pks.map(p=>p.id))+1:1;
+    pks.push({id:newId,nama,harga,hpp,durasi,status});
+  }
+  DB.savePakets(pks);closeModal();showToast('Paket berhasil disimpan!');renderPaket();
+}
+
+function togglePaketStatus(id) {
+  const pks=DB.pakets();const idx=pks.findIndex(p=>p.id===id);
+  if(idx>=0){pks[idx].status=pks[idx].status==='aktif'?'nonaktif':'aktif';DB.savePakets(pks);renderPaket();showToast('Status paket diperbarui');}
+}
+
+// ============ CUSTOMER ============
+function renderCustomer() {
+  const search=(document.getElementById('searchCustomer')||{value:''}).value.toLowerCase();
+  const custs=DB.customers();const trxs=DB.transaksis();
+  let filtered=custs.filter(c=>!search||(c.nama+c.wa).toLowerCase().includes(search));
+  const body=document.getElementById('customerBody');
+  if(!filtered.length){body.innerHTML='<tr><td colspan="6"><div class="empty-state"><i class="bi bi-people"></i>Belum ada customer</div></td></tr>';return;}
+  body.innerHTML=filtered.map((c,i)=>{
+    const total=trxs.filter(t=>t.custId===c.id).length;
+    return `<tr><td>${i+1}</td><td style="font-weight:600;">${c.nama}</td>
+      <td><a href="https://wa.me/${c.wa}" target="_blank" style="color:var(--success);text-decoration:none;"><i class="bi bi-whatsapp"></i> ${c.wa}</a></td>
+      <td style="color:var(--gray-400);font-size:13px;">${c.catatan||'–'}</td>
+      <td><span class="badge-custom badge-info">${total} transaksi</span></td>
+      <td><button class="btn-topbar" style="padding:4px 10px;font-size:12px;" onclick="editCustomer(${c.id})"><i class="bi bi-pencil"></i></button>
+      <button class="btn-topbar btn-accent" style="padding:4px 10px;font-size:12px;" onclick="openModalTransaksi({custId:${c.id}})"><i class="bi bi-plus-lg"></i></button></td></tr>`;
+  }).join('');
+}
+
+function openModalCustomer(id=null) {
+  const custs=DB.customers();const c=id?custs.find(cu=>cu.id===id):null;
+  const html=`
+    <div class="mb-3"><label class="form-label">Nama *</label><input type="text" class="form-control" id="cNama" value="${c?c.nama:''}" placeholder="Nama customer"></div>
+    <div class="mb-3"><label class="form-label">No. WhatsApp *</label><input type="text" class="form-control" id="cWa" value="${c?c.wa:''}" placeholder="628xxxxxxxxxx"></div>
+    <div class="mb-3"><label class="form-label">Catatan</label><textarea class="form-control" id="cCatatan" rows="3" placeholder="Catatan opsional">${c?c.catatan:''}</textarea></div>`;
+  openModal(id?'Edit Customer':'Tambah Customer',html,`saveCustomer(${id||'null'})`);
+}
+
+function editCustomer(id){openModalCustomer(id);}
+
+function saveCustomer(id) {
+  const nama=document.getElementById('cNama').value.trim();
+  const wa=document.getElementById('cWa').value.trim();
+  const catatan=document.getElementById('cCatatan').value.trim();
+  if(!nama||!wa){showToast('Nama & WhatsApp wajib diisi!','error');return;}
+  const custs=DB.customers();
+  if(id){
+    const idx=custs.findIndex(c=>c.id===id);if(idx>=0)custs[idx]={...custs[idx],nama,wa,catatan};
+  } else {
+    const newId=custs.length?Math.max(...custs.map(c=>c.id))+1:1;
+    custs.push({id:newId,nama,wa,catatan});
+  }
+  DB.saveCustomers(custs);closeModal();showToast('Customer berhasil disimpan!');renderCustomer();
+}
+
+// ============ SUPPLIER ============
+function renderSupplier() {
+  const supps=DB.suppliers();const trxs=DB.transaksis();
+  const body=document.getElementById('supplierBody');
+  if(!supps.length){body.innerHTML='<tr><td colspan="5"><div class="empty-state"><i class="bi bi-truck"></i>Belum ada supplier</div></td></tr>';return;}
+  body.innerHTML=supps.map((s,i)=>{
+    const total=trxs.filter(t=>t.suppId===s.id).length;
+    return `<tr><td>${i+1}</td><td style="font-weight:600;">${s.nama}</td>
+      <td>${s.kontak}</td>
+      <td><span class="badge-custom badge-info">${total} transaksi</span></td>
+      <td><button class="btn-topbar" style="padding:4px 10px;font-size:12px;" onclick="editSupplier(${s.id})"><i class="bi bi-pencil"></i></button></td></tr>`;
+  }).join('');
+}
+
+function openModalSupplier(id=null) {
+  const supps=DB.suppliers();const s=id?supps.find(sp=>sp.id===id):null;
+  const html=`
+    <div class="mb-3"><label class="form-label">Nama Supplier *</label><input type="text" class="form-control" id="sNama" value="${s?s.nama:''}" placeholder="Nama toko / supplier"></div>
+    <div class="mb-3"><label class="form-label">Kontak *</label><input type="text" class="form-control" id="sKontak" value="${s?s.kontak:''}" placeholder="No. HP / Telegram / etc"></div>`;
+  openModal(id?'Edit Supplier':'Tambah Supplier',html,`saveSupplier(${id||'null'})`);
+}
+
+function editSupplier(id){openModalSupplier(id);}
+
+function saveSupplier(id) {
+  const nama=document.getElementById('sNama').value.trim();
+  const kontak=document.getElementById('sKontak').value.trim();
+  if(!nama||!kontak){showToast('Semua field wajib diisi!','error');return;}
+  const supps=DB.suppliers();
+  if(id){
+    const idx=supps.findIndex(s=>s.id===id);if(idx>=0)supps[idx]={...supps[idx],nama,kontak};
+  } else {
+    const newId=supps.length?Math.max(...supps.map(s=>s.id))+1:1;
+    supps.push({id:newId,nama,kontak});
+  }
+  DB.saveSuppliers(supps);closeModal();showToast('Supplier berhasil disimpan!');renderSupplier();
+}
+
+// ============ LAPORAN ============
+let laporanChartInst,laporanPaketChartInst;
+
+function renderLaporan() {
+  const periode=(document.getElementById('filterLaporanPeriode')||{value:''}).value;
+  const trxs=DB.transaksis();const custs=DB.customers();const pks=DB.pakets();
+  let filtered=trxs;
+  if(periode){filtered=trxs.filter(t=>t.tgl&&t.tgl.startsWith(periode));}
+  const totalOmzet=filtered.reduce((a,t)=>a+t.harga,0);
+  const totalProfit=filtered.reduce((a,t)=>a+t.profit,0);
+  const totalHpp=filtered.reduce((a,t)=>a+t.hpp,0);
+  document.getElementById('laporanStats').innerHTML=`
+    <div class="stat-card"><div class="stat-card-label">Total Transaksi</div><div class="stat-card-value">${filtered.length}</div></div>
+    <div class="stat-card"><div class="stat-card-label">Total Omzet</div><div class="stat-card-value">${fmtRupiah(totalOmzet)}</div></div>
+    <div class="stat-card"><div class="stat-card-label">Total HPP</div><div class="stat-card-value">${fmtRupiah(totalHpp)}</div></div>
+    <div class="stat-card"><div class="stat-card-label">Laba Kotor</div><div class="stat-card-value" style="color:var(--success);">${fmtRupiah(totalProfit)}</div></div>`;
+
+  const months=[];const omzetArr=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date();d.setMonth(d.getMonth()-i);
+    const m=d.toISOString().substring(0,7);
+    const mn=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    months.push(mn[d.getMonth()]);
+    omzetArr.push(trxs.filter(t=>t.tgl&&t.tgl.startsWith(m)).reduce((a,t)=>a+t.harga,0));
+  }
+  if(laporanChartInst)laporanChartInst.destroy();
+  laporanChartInst=new Chart(document.getElementById('laporanChart'),{type:'line',data:{labels:months,datasets:[{label:'Omzet',data:omzetArr,borderColor:'#2563eb',backgroundColor:'rgba(37,99,235,0.06)',fill:true,tension:0.4,pointBackgroundColor:'#2563eb'}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'Rp '+v.toLocaleString('id-ID')}}}}});
+
+  const pkgData={};
+  filtered.forEach(t=>{const p=pks.find(p=>p.id===t.paketId);if(p)pkgData[p.nama]=(pkgData[p.nama]||0)+1;});
+  if(laporanPaketChartInst)laporanPaketChartInst.destroy();
+  const pkNames=Object.keys(pkgData);const pkVals=Object.values(pkgData);
+  laporanPaketChartInst=new Chart(document.getElementById('laporanPaketChart'),{type:'doughnut',data:{labels:pkNames.length?pkNames:['Belum ada'],datasets:[{data:pkVals.length?pkVals:[1],backgroundColor:['#2563eb','#10b981','#f59e0b','#ef4444','#8b5cf6'],borderWidth:0}]},options:{responsive:true,plugins:{legend:{position:'bottom'}}}});
+
+  document.getElementById('laporanBody').innerHTML=filtered.sort((a,b)=>new Date(b.tgl)-new Date(a.tgl)).map(t=>{
+    const c=custs.find(c=>c.id===t.custId);const p=pks.find(p=>p.id===t.paketId);
+    return `<tr><td>${t.tgl}</td><td>${c?c.nama:'–'}</td><td>${p?p.nama:'–'}</td><td>${fmtRupiah(t.harga)}</td><td>${fmtRupiah(t.hpp)}</td><td style="color:var(--success);font-weight:600;">${fmtRupiah(t.profit)}</td><td><span class="badge-custom ${t.statusBayar==='lunas'?'badge-info':'badge-warning'}">${t.statusBayar}</span></td></tr>`;
+  }).join('')||'<tr><td colspan="7" class="text-center text-muted py-3">Tidak ada data</td></tr>';
+}
+
+function exportLaporan() {
+  const trxs=DB.transaksis();const custs=DB.customers();const pks=DB.pakets();
+  let csv='Tanggal,Customer,Paket,Harga Jual,HPP,Profit,Status Bayar\n';
+  trxs.forEach(t=>{
+    const c=custs.find(c=>c.id===t.custId);const p=pks.find(p=>p.id===t.paketId);
+    csv+=`${t.tgl},"${c?c.nama:'?'}","${p?p.nama:'?'}",${t.harga},${t.hpp},${t.profit},${t.statusBayar}\n`;
+  });
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='laporan_subflow.csv';a.click();
+  showToast('Export CSV berhasil!');
+}
+
+// ============ BIAYA ============
+function renderBiaya() {
+  const biayas=DB.biayas();
+  const todayMonth=new Date().toISOString().substring(0,7);
+  const monthTotal=biayas.filter(b=>b.tgl&&b.tgl.startsWith(todayMonth)).reduce((a,b)=>a+b.nominal,0);
+  const allTotal=biayas.reduce((a,b)=>a+b.nominal,0);
+  document.getElementById('biayaStats').innerHTML=`
+    <div class="stat-card"><div class="stat-card-label">Biaya Bulan Ini</div><div class="stat-card-value" style="color:var(--danger);">${fmtRupiah(monthTotal)}</div></div>
+    <div class="stat-card"><div class="stat-card-label">Total Semua Biaya</div><div class="stat-card-value">${fmtRupiah(allTotal)}</div></div>
+    <div class="stat-card"><div class="stat-card-label">Jumlah Pos Biaya</div><div class="stat-card-value">${biayas.length}</div></div>`;
+  const body=document.getElementById('biayaBody');
+  if(!biayas.length){body.innerHTML='<tr><td colspan="5"><div class="empty-state"><i class="bi bi-wallet2"></i>Belum ada biaya</div></td></tr>';return;}
+  body.innerHTML=biayas.sort((a,b)=>new Date(b.tgl)-new Date(a.tgl)).map((b,i)=>`<tr>
+    <td>${i+1}</td><td style="font-weight:600;">${b.nama}</td>
+    <td style="color:var(--danger);font-weight:600;">${fmtRupiah(b.nominal)}</td>
+    <td>${b.tgl}</td>
+    <td><button class="btn-topbar" style="padding:4px 10px;font-size:12px;color:var(--danger);border-color:var(--danger);" onclick="hapusBiaya(${b.id})"><i class="bi bi-trash"></i></button></td></tr>`).join('');
+}
+
+function openModalBiaya() {
+  const html=`
+    <div class="mb-3"><label class="form-label">Nama Biaya *</label><input type="text" class="form-control" id="bNama" placeholder="cth: Iklan, Hosting, dll"></div>
+    <div class="mb-3"><label class="form-label">Nominal *</label><input type="number" class="form-control" id="bNominal" placeholder="50000"></div>
+    <div class="mb-3"><label class="form-label">Tanggal *</label><input type="date" class="form-control" id="bTgl" value="${new Date().toISOString().split('T')[0]}"></div>`;
+  openModal('Tambah Biaya',html,'saveBiaya()');
+}
+
+function saveBiaya() {
+  const nama=document.getElementById('bNama').value.trim();
+  const nominal=parseFloat(document.getElementById('bNominal').value);
+  const tgl=document.getElementById('bTgl').value;
+  if(!nama||!nominal||!tgl){showToast('Semua field wajib diisi!','error');return;}
+  const biayas=DB.biayas();
+  const newId=biayas.length?Math.max(...biayas.map(b=>b.id))+1:1;
+  biayas.push({id:newId,nama,nominal,tgl});
+  DB.saveBiayas(biayas);closeModal();showToast('Biaya berhasil dicatat!');renderBiaya();
+}
+
+function hapusBiaya(id) {
+  if(!confirm('Hapus biaya ini?'))return;
+  DB.saveBiayas(DB.biayas().filter(b=>b.id!==id));renderBiaya();showToast('Biaya dihapus');
+}
+
+// ============ PROFIT ============
+let profitChartInst;
+function renderProfit() {
+  const filterBulan=(document.getElementById('filterProfitBulan')||{value:''}).value||new Date().toISOString().substring(0,7);
+  if(document.getElementById('filterProfitBulan'))document.getElementById('filterProfitBulan').value=filterBulan;
+  const trxs=DB.transaksis();const biayas=DB.biayas();
+  const mTrx=trxs.filter(t=>t.tgl&&t.tgl.startsWith(filterBulan));
+  const mBiaya=biayas.filter(b=>b.tgl&&b.tgl.startsWith(filterBulan));
+  const totalPenjualan=mTrx.reduce((a,t)=>a+t.harga,0);
+  const totalHpp=mTrx.reduce((a,t)=>a+t.hpp,0);
+  const labaKotor=mTrx.reduce((a,t)=>a+t.profit,0);
+  const totalBiaya=mBiaya.reduce((a,b)=>a+b.nominal,0);
+  const labaBersih=labaKotor-totalBiaya;
+  document.getElementById('profitStats').innerHTML=`
+    <div class="stat-card"><div class="stat-card-label">Total Penjualan</div><div class="stat-card-value">${fmtRupiah(totalPenjualan)}</div></div>
+    <div class="stat-card"><div class="stat-card-label">Total HPP</div><div class="stat-card-value">${fmtRupiah(totalHpp)}</div></div>
+    <div class="stat-card"><div class="stat-card-label">Laba Kotor</div><div class="stat-card-value" style="color:var(--success);">${fmtRupiah(labaKotor)}</div></div>
+    <div class="stat-card"><div class="stat-card-label">Biaya Operasional</div><div class="stat-card-value" style="color:var(--danger);">${fmtRupiah(totalBiaya)}</div></div>
+    <div class="stat-card"><div class="stat-card-label">Laba Bersih</div><div class="stat-card-value" style="color:${labaBersih>=0?'var(--success)':'var(--danger)'};">${fmtRupiah(labaBersih)}</div></div>`;
+
+  const months=[];const labaArr=[];const biayaArr=[];
+  for(let i=5;i>=0;i--){
+    const d=new Date();d.setMonth(d.getMonth()-i);
+    const m=d.toISOString().substring(0,7);
+    const mn=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    months.push(mn[d.getMonth()]);
+    const mT=trxs.filter(t=>t.tgl&&t.tgl.startsWith(m));
+    const mB=biayas.filter(b=>b.tgl&&b.tgl.startsWith(m));
+    labaArr.push(mT.reduce((a,t)=>a+t.profit,0));
+    biayaArr.push(mB.reduce((a,b)=>a+b.nominal,0));
+  }
+  if(profitChartInst)profitChartInst.destroy();
+  profitChartInst=new Chart(document.getElementById('profitChart'),{type:'bar',data:{labels:months,datasets:[{label:'Laba Kotor',data:labaArr,backgroundColor:'rgba(16,185,129,0.2)',borderColor:'#10b981',borderWidth:2,borderRadius:6},{label:'Biaya',data:biayaArr,backgroundColor:'rgba(239,68,68,0.15)',borderColor:'#ef4444',borderWidth:2,borderRadius:6}]},options:{responsive:true,plugins:{legend:{position:'top'}},scales:{y:{beginAtZero:true,ticks:{callback:v=>'Rp '+v.toLocaleString('id-ID')}}}}});
+
+  document.getElementById('profitDetail').innerHTML=`
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      ${[['Total Penjualan',totalPenjualan,'var(--gray-800)'],['Total HPP',totalHpp,'var(--danger)'],['Laba Kotor',labaKotor,'var(--success)'],['Biaya Operasional',totalBiaya,'var(--danger)'],['Laba Bersih',labaBersih,labaBersih>=0?'var(--success)':'var(--danger)']].map(([l,v,c])=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-100);">
+          <span style="font-size:13px;color:var(--gray-600);">${l}</span>
+          <span style="font-weight:700;color:${c};">${fmtRupiah(v)}</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ============ FOTO PROFIL ============
+function handlePhotoUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { showToast('Ukuran foto maksimal 2MB', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64 = e.target.result;
+    const session = DB.session();
+    if (session) DB.set('photo_' + session.id, base64);
+    applyProfilePhoto(base64);
+    showToast('Foto profil berhasil diperbarui! 📸');
+  };
+  reader.readAsDataURL(file);
+}
+
+function applyProfilePhoto(base64) {
+  const bigAvatar = document.getElementById('profileAvatarBig');
+  if (bigAvatar) bigAvatar.innerHTML = `<img src="${base64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+  const sideAvatar = document.getElementById('sidebarAvatar');
+  if (sideAvatar) {
+    sideAvatar.innerHTML = `<img src="${base64}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    sideAvatar.style.padding = '0'; sideAvatar.style.overflow = 'hidden';
+  }
+}
+
+function loadProfilePhoto() {
+  const session = DB.session();
+  if (!session) return;
+  const saved = DB.get('photo_' + session.id);
+  if (saved) applyProfilePhoto(saved);
+}
+
+// ============ PROFIL ============
+function saveProfile() {
+  const name=document.getElementById('editName').value.trim();
+  const email=document.getElementById('editEmail').value.trim();
+  const pass=document.getElementById('editPass').value;
+  if(!name||!email){showToast('Nama & email wajib diisi!','error');return;}
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){showToast('Format email tidak valid!','error');return;}
+  if(pass&&pass.length<6){showToast('Password minimal 6 karakter!','error');return;}
+  const session=DB.session();
+  const users=DB.users();
+  const idx=users.findIndex(u=>u.id===session.id);
+  if(idx>=0){
+    users[idx].name=name;users[idx].email=email;
+    if(pass)users[idx].pass=hashPass(pass);
+    DB.saveUsers(users);
+    DB.set('session',{...users[idx],remember:session.remember});
+    document.getElementById('sidebarName').textContent=name;
+    document.getElementById('sidebarEmail').textContent=email;
+    document.getElementById('profileNameDisplay').textContent=name;
+    document.getElementById('profileEmailDisplay').textContent=email;
+    document.getElementById('editPass').value='';
+    const savedPhoto = DB.get('photo_' + session.id);
+    if (savedPhoto) { applyProfilePhoto(savedPhoto); }
+    else {
+      document.getElementById('sidebarAvatar').textContent=name[0].toUpperCase();
+      document.getElementById('profileAvatarBig').innerHTML=name[0].toUpperCase();
+    }
+    showToast('Profil berhasil diperbarui!');
+  }
+}
+
+// ============ STARTUP ============
+(function() {
+  if(DB.get('darkMode')){document.documentElement.setAttribute('data-theme','dark');document.getElementById('darkIcon').className='bi bi-sun';}
+  const session=DB.session();
+  if(session){
+    const users=DB.users();
+    if(!users.length){users.push({id:1,name:'Demo User',email:'demo@subflow.id',pass:hashPass('demo123')});DB.saveUsers(users);}
+    initApp(session);
+  } else {
+    const users=DB.users();
+    if(!users.length){users.push({id:1,name:'Demo User',email:'demo@subflow.id',pass:hashPass('demo123')});DB.saveUsers(users);}
+    document.getElementById('auth-screen').style.display='flex';
+  }
+  const curMonth=new Date().toISOString().substring(0,7);
+  ['filterBulanTransaksi','filterLaporanPeriode','filterProfitBulan'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=curMonth;});
+
+  // ✅ WATERMARK
+  const wm = document.createElement('div');
+  wm.style.cssText = 'position:fixed;bottom:14px;right:18px;z-index:9998;pointer-events:none;text-align:right;';
+  wm.innerHTML = '<span style="font-size:11px;color:var(--gray-400);opacity:0.45;font-weight:500;letter-spacing:0.01em;">© Copyright by Aswin Maulana &nbsp;|&nbsp; dibuat dengan 🩷 oleh Aswin Maulana</span>';
+  document.body.appendChild(wm);
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
